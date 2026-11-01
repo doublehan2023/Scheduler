@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { dummyAccountsData, PLATFORMS } from "../assets/assets";
 import { PlusIcon } from "lucide-react";
 import AccountList from "../components/AccountList";
+import PlatformPickerModal from "../components/PlatformPickerModal";
 
 type Account = (typeof dummyAccountsData)[number];
 
 const Accounts = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [connecting, setConnecting] = useState<string | null>(null);
   const [showPlatformPicker, setShowPlatformPicker] = useState(false);
 
   const fetchAccounts = async (
@@ -22,11 +24,22 @@ const Accounts = () => {
     fetchAccounts();
   }, []);
 
+  const handleConnect = async (platform: string) => {
+    setConnecting(platform);
+    setTimeout(() => {
+      setConnecting(null);
+      setAccounts((prev)=> [...prev, dummyAccountsData[0]])
+      setShowPlatformPicker(false);
+    }, 1000);
+  }
+
   const handleDisconnect = async (accountId: string) => {
     setAccounts((currentAccounts) =>
       currentAccounts.filter((account) => account._id !== accountId),
     );
   };
+
+  const connectedIds = accounts.map((account) => account.platform);
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -53,17 +66,12 @@ const Accounts = () => {
 
       {/* Platform picker modal */}
       {showPlatformPicker && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <p className="text-sm text-slate-500">
-            Platform connection is not configured yet.
-          </p>
-          <button
-            onClick={() => setShowPlatformPicker(false)}
-            className="mt-3 text-sm text-red-500"
-          >
-            Close
-          </button>
-        </div>
+        <PlatformPickerModal
+          connectedIds={connectedIds}
+          connecting={connecting}
+          onClose={() => setShowPlatformPicker(false)}
+          onConnect={handleConnect}
+        />
       )}
 
       {/* Connected Account List */}
